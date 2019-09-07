@@ -356,7 +356,7 @@ func main() {
 	mux.HandleFunc(pat.Get("/users/:user_id"), getIndex)
 	mux.HandleFunc(pat.Get("/users/setting"), getIndex)
 	mux.HandleFunc(pat.Get("/stats"), getStats)
-	mux.HandleFunc(pat.Get("/users/stats_rest"), resetStat)
+	mux.HandleFunc(pat.Get("/stats_reset"), resetStat)
 	// Assets
 	mux.Handle(pat.Get("/*"), http.FileServer(http.Dir("../public")))
 	log.Fatal(http.ListenAndServe(":8000", mux))
