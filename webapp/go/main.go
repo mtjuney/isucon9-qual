@@ -325,13 +325,11 @@ func main() {
 	categoryMap = make(map[int]Category)
 	userMap = make(map[int64]UserSimple)
 
-	/*
 	categories := []Category{}
 	users := []User{}
 
-
 	err = dbx.Select(&categories,
-		"SELECT * FROM `category`")
+		"SELECT * FROM `categories`")
 	if err != nil {
 		log.Fatalf("load category.\nError: %s", err.Error())
 	}
@@ -344,7 +342,7 @@ func main() {
 	for _, user := range users {
 		userMap[user.ID] = UserSimple{ID: user.ID, AccountName: user.AccountName, NumSellItems: user.NumSellItems}
 	}
-	*/
+
 	if err != nil {
 		log.Fatalf("load category.\nError: %s", err.Error())
 	}
