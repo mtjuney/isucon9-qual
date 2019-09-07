@@ -285,14 +285,6 @@ type transactionValue struct {
 	TransactionID                 int64     `json:"transaction_id" db:"transaction_id"`
 	TransactionSellerID           int64     `json:"transaction_seller_id" db:"transaction_seller_id"`
 	TransactionStatus             string    `json:"transaction_status" db:"transaction_status"`
-	ItemID             int64     `json:"item_id" db:"item_id"`
-	ItemName           string    `json:"item_name" db:"item_name"`
-	ItemPrice          int       `json:"item_price" db:"item_price"`
-	ItemDescription    string    `json:"item_description" db:"item_description"`
-	ItemCategoryID     int       `json:"item_category_id" db:"item_category_id"`
-	ItemRootCategoryID int       `json:"item_root_category_id" db:"item_root_category_id"`
-	TransactionCreatedAt          time.Time `json:"-" db:"transaction_created_at"`
-	TransactionUpdatedAt          time.Time `json:"-" db:"transaction_updated_at"`
 	ShippingStatus string    `json:"shipping_status" db:"shipping_status"`
 }
 
@@ -952,7 +944,7 @@ func getTransactions(w http.ResponseWriter, r *http.Request) {
 	if itemID > 0 && createdAt > 0 {
 		// paging
 		err := tx.Select(&tVs,
-			"SELECT items.id, items.seller_id, items.buyer_id, items.status, items.name, items.price, items.description, items.image_name, items.category_id, items.created_at, items.updated_at, transaction_evidences.id as transaction_id, transaction_evidences.seller_id as transaction_id, transaction_evidences.status as transaction_status, transaction_evidences.item_name as transaction_item_name, transaction_evidences.item_price as transaction_item_price, transaction_evidences.item_description as transaction_item_description, transaction_evidences.item_category_id as transaction_item_category_id , transaction_evidences.item_root_category_id as transaction_root_category_id, transaction_evidences.created_at as transaction_created_at, transaction_evidences.updated_at as transaction_updated_at FROM items JOIN transaction_evidences ON items.id = transaction_evidences.item_id LEFT OUTER JOIN shippings ON transaction_evidences.id = transaction_evidence_id ON WHERE items.seller_id = ? OR items.buyer_id = ?) AND items.status IN (?,?,?,?,?) AND (items.created_at < ? OR (items.created_at <= ? AND items.id < ?)) ORDER BY items.created_at DESC, items.id DESC LIMIT ?",
+			"SELECT items.id, items.seller_id, items.buyer_id, items.status, items.name, items.price, items.description, items.image_name, items.category_id, items.created_at, items.updated_at, transaction_evidences.id as transaction_id, transaction_evidences.status as transaction_status FROM items JOIN transaction_evidences ON items.id = transaction_evidences.item_id LEFT OUTER JOIN shippings ON transaction_evidences.id = transaction_evidence_id ON WHERE items.seller_id = ? OR items.buyer_id = ?) AND items.status IN (?,?,?,?,?) AND (items.created_at < ? OR (items.created_at <= ? AND items.id < ?)) ORDER BY items.created_at DESC, items.id DESC LIMIT ?",
 			user.ID,
 			user.ID,
 			ItemStatusOnSale,
@@ -974,7 +966,7 @@ func getTransactions(w http.ResponseWriter, r *http.Request) {
 	} else {
 		// 1st page
 		err := tx.Select(&tVs,
-			"SELECT items.id, items.seller_id, items.buyer_id, items.status, items.name, items.price, items.description, items.image_name, items.category_id, items.created_at, items.updated_at, transaction_evidences.id as transaction_id, transaction_evidences.seller_id as transaction_id, transaction_evidences.status as transaction_status, transaction_evidences.item_name as transaction_item_name, transaction_evidences.item_price as transaction_item_price, transaction_evidences.item_description as transaction_item_description, transaction_evidences.item_category_id as transaction_item_category_id , transaction_evidences.item_root_category_id as transaction_root_category_id, transaction_evidences.created_at as transaction_created_at, transaction_evidences.updated_at as transaction_updated_at FROM items JOIN transaction_evidences ON items.id = transaction_evidences.item_id LEFT OUTER JOIN shippings ON transaction_evidences.id = transaction_evidence_id WHERE (items.seller_id = ? OR items.buyer_id = ?) AND items.status IN (?,?,?,?,?) ORDER BY items.created_at DESC, items.id DESC LIMIT ?",
+			"SELECT items.id, items.seller_id, items.buyer_id, items.status, items.name, items.price, items.description, items.image_name, items.category_id, items.created_at, items.updated_at, transaction_evidences.id as transaction_id, transaction_evidences.seller_id as transaction_id, transaction_evidences.status as transaction_status FROM items JOIN transaction_evidences ON items.id = transaction_evidences.item_id LEFT OUTER JOIN shippings ON transaction_evidences.id = transaction_evidence_id WHERE (items.seller_id = ? OR items.buyer_id = ?) AND items.status IN (?,?,?,?,?) ORDER BY items.created_at DESC, items.id DESC LIMIT ?",
 			user.ID,
 			user.ID,
 			ItemStatusOnSale,
