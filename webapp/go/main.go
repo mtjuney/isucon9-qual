@@ -282,10 +282,16 @@ type transactionValue struct {
 	CreatedAt   time.Time `json:"-" db:"created_at"`
 	UpdatedAt   time.Time `json:"-" db:"updated_at"`
 
-	TransactionID                 sql.NullInt64     `json:"transaction_id" db:"transaction_id"`
-	TransactionSellerID           sql.NullInt64      `json:"transaction_seller_id" db:"transaction_seller_id"`
-	TransactionStatus             sql.NullString   `json:"transaction_status" db:"transaction_status"`
-	ShippingStatus sql.NullString    `json:"shipping_status" db:"shipping_status"`
+	TransactionID       sql.NullInt64  `json:"transaction_id" db:"transaction_id"`
+	TransactionSellerID sql.NullInt64  `json:"transaction_seller_id" db:"transaction_seller_id"`
+	TransactionStatus   sql.NullString `json:"transaction_status" db:"transaction_status"`
+	ShippingStatus      sql.NullString `json:"shipping_status" db:"shipping_status"`
+
+	SellerAccountName  string `json:"seller_account_name"`
+	SellerNumSellItems int    `json:"seller_num_sell_items"`
+
+	BuyerAccountName  sql.NullString `json:"buyer_account_name"`
+	BuyerNumSellItems sql.NullInt64  `json:"buyer_num_sell_items"`
 }
 
 func init() {
@@ -940,7 +946,7 @@ func getTransactions(w http.ResponseWriter, r *http.Request) {
 	if itemID > 0 && createdAt > 0 {
 		// paging
 		err := tx.Select(&tVs,
-			"SELECT items.id, items.seller_id, items.buyer_id, items.status, items.name, items.price, items.description, items.image_name, items.category_id, items.created_at, items.updated_at, transaction_evidences.id as transaction_id, transaction_evidences.status as transaction_status, shippings.status as shipping_status FROM items LEFT OUTER JOIN transaction_evidences ON items.id = transaction_evidences.item_id LEFT OUTER JOIN shippings ON transaction_evidences.id = transaction_evidence_id WHERE (items.seller_id = ? OR items.buyer_id = ?) AND items.status IN (?,?,?,?,?) AND (items.created_at < ? OR (items.created_at <= ? AND items.id < ?)) ORDER BY items.created_at DESC, items.id DESC LIMIT ?",
+			"SELECT buyer.id as buyer_id, buyer.account_name as buyer_account_name, buyser.num_sell_items as buyer_num_sell_items, seller.id as seller_id, seller.account_name as seller_account_name, seller.num_sell_items as seller_num_sell_items, items.id, items.seller_id, items.buyer_id, items.status, items.name, items.price, items.description, items.image_name, items.category_id, items.created_at, items.updated_at, transaction_evidences.id as transaction_id, transaction_evidences.status as transaction_status, shippings.status as shipping_status FROM items JOIN users seller ON seller.id = items.seller_id LEFT OTUER JOIN users buyer ON items.buyer_id = buyer.id LEFT OUTER JOIN transaction_evidences ON items.id = transaction_evidences.item_id LEFT OUTER JOIN shippings ON transaction_evidences.id = transaction_evidence_id WHERE (items.seller_id = ? OR items.buyer_id = ?) AND items.status IN (?,?,?,?,?) AND (items.created_at < ? OR (items.created_at <= ? AND items.id < ?)) ORDER BY items.created_at DESC, items.id DESC LIMIT ?",
 			user.ID,
 			user.ID,
 			ItemStatusOnSale,
@@ -962,7 +968,7 @@ func getTransactions(w http.ResponseWriter, r *http.Request) {
 	} else {
 		// 1st page
 		err := tx.Select(&tVs,
-			"SELECT items.id, items.seller_id, items.buyer_id, items.status, items.name, items.price, items.description, items.image_name, items.category_id, items.created_at, items.updated_at, transaction_evidences.id as transaction_id, transaction_evidences.id as transaction_id, transaction_evidences.status as transaction_status, shippings.status as shipping_status FROM items LEFT OUTER JOIN transaction_evidences ON items.id = transaction_evidences.item_id LEFT OUTER JOIN shippings ON transaction_evidences.id = transaction_evidence_id WHERE (items.seller_id = ? OR items.buyer_id = ?) AND items.status IN (?,?,?,?,?) ORDER BY items.created_at DESC, items.id DESC LIMIT ?",
+			"SELECT buyer.id as buyer_id, buyer.account_name as buyer_account_name, buyser.num_sell_items as buyer_num_sell_items, seller.id as seller_id, seller.account_name as seller_account_name, seller.num_sell_items as seller_num_sell_items, items.id, items.seller_id, items.buyer_id, items.status, items.name, items.price, items.description, items.image_name, items.category_id, items.created_at, items.updated_at, transaction_evidences.id as transaction_id, transaction_evidences.status as transaction_status, shippings.status as shipping_status FROM items JOIN users seller ON seller.id = items.seller_id LEFT OTUER JOIN users buyer ON items.buyer_id = buyer.id LEFT OUTER JOIN transaction_evidences ON items.id = transaction_evidences.item_id LEFT OUTER JOIN shippings ON transaction_evidences.id = transaction_evidence_id WHERE (items.seller_id = ? OR items.buyer_id = ?) AND items.status IN (?,?,?,?,?) ORDER BY items.created_at DESC, items.id DESC LIMIT ?",
 			user.ID,
 			user.ID,
 			ItemStatusOnSale,
@@ -982,12 +988,8 @@ func getTransactions(w http.ResponseWriter, r *http.Request) {
 
 	itemDetails := []ItemDetail{}
 	for _, tV := range tVs {
-		seller, err := getUserSimpleByID(tx, tV.SellerID)
-		if err != nil {
-			outputErrorMsg(w, http.StatusNotFound, "seller not found")
-			tx.Rollback()
-			return
-		}
+		seller := UserSimple{tV.SellerID, tV.SellerAccountName, tV.SellerNumSellItems}
+
 		category, err := getCategoryByID(tx, tV.CategoryID)
 		if err != nil {
 			outputErrorMsg(w, http.StatusNotFound, "category not found")
@@ -1007,65 +1009,15 @@ func getTransactions(w http.ResponseWriter, r *http.Request) {
 			Description: tV.Description,
 			ImageURL:    getImageURL(tV.ImageName),
 			CategoryID:  tV.CategoryID,
-			// TransactionEvidenceID
-			// TransactionEvidenceStatus
-			// ShippingStatus
-			Category:  &category,
-			CreatedAt: tV.CreatedAt.Unix(),
+			Category:    &category,
+			CreatedAt:   tV.CreatedAt.Unix(),
 		}
 
 		if tV.BuyerID != 0 {
-			buyer, err := getUserSimpleByID(tx, tV.BuyerID)
-			if err != nil {
-				outputErrorMsg(w, http.StatusNotFound, "buyer not found")
-				tx.Rollback()
-				return
-			}
-			itemDetail.BuyerID = tV.BuyerID
-			itemDetail.Buyer = &buyer
+			itemDetail.Buyer = &UserSimple{tV.BuyerID, tV.BuyerAccountName.String, int(tV.BuyerNumSellItems.Int64)}
 		}
-/*
-		transactionEvidence := TransactionEvidence{}
-		err = tx.Get(&transactionEvidence, "SELECT * FROM `transaction_evidences` WHERE `item_id` = ?", tV.ID)
-		if err != nil && err != sql.ErrNoRows {
-			// It's able to ignore ErrNoRows
-			log.Print(err)
-			outputErrorMsg(w, http.StatusInternalServerError, "db error")
-			tx.Rollback()
-			return
-		}*/
 
 		if tV.TransactionID.Valid && tV.TransactionID.Int64 > 0 {
-		// if transactionEvidence.ID > 0 {
-			/*
-		shipping := Shipping{}
-			err = tx.Get(&shipping, "SELECT * FROM `shippings` WHERE `transaction_evidence_id` = ?", transactionEvidence.ID)
-			if err == sql.ErrNoRows {
-				outputErrorMsg(w, http.StatusNotFound, "shipping not found")
-				tx.Rollback()
-				return
-			}
-			if err != nil {
-				log.Print(err)
-				outputErrorMsg(w, http.StatusInternalServerError, "db error")
-				tx.Rollback()
-				return
-			}
-
-			ssr, err := APIShipmentStatus(getShipmentServiceURL(), &APIShipmentStatusReq{
-				ReserveID: shipping.ReserveID,
-			})
-			if err != nil {
-				log.Print(err)
-				outputErrorMsg(w, http.StatusInternalServerError, "failed to request to shipment service")
-				tx.Rollback()
-				return
-			}
-
-			itemDetail.TransactionEvidenceID = transactionEvidence.ID
-			itemDetail.TransactionEvidenceStatus = transactionEvidence.Status
-			itemDetail.ShippingStatus = ssr.Status
-				*/
 			itemDetail.TransactionEvidenceID = tV.TransactionID.Int64
 			itemDetail.TransactionEvidenceStatus = tV.TransactionStatus.String
 			itemDetail.ShippingStatus = tV.ShippingStatus.String
