@@ -18,5 +18,5 @@ echo "  serv num: $snum"
 echo "  host    : $host"
 
 ssh -i ~/.ssh/isucon9.pem "root@$host" < ${dir}/setup-common.sh
-# ssh -i ~/.ssh/isucon9.pem "root@$host" < ${dir}/setup-${snum}.sh
+ssh -i ~/.ssh/isucon9.pem "root@$host" < ${dir}/setup-${snum}.sh
 ssh -i ~/.ssh/isucon9.pem "root@$host" < ${dir}/restart.sh
