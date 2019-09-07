@@ -444,7 +444,7 @@ func getUserSimpleByID(q sqlx.Queryer, userID int64) (userSimple UserSimple, err
 	userSimple.AccountName = user.AccountName
 	userSimple.Address = user.Address
 	userSimple.NumSellItems = user.NumSellItems
-	return userSimple, err
+	return userSimple, nil
 }
 
 func getCategoryByID(q sqlx.Queryer, categoryID int) (Category, error) {
