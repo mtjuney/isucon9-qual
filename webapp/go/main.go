@@ -348,7 +348,6 @@ func main() {
 		log.Fatalf("load category.\nError: %s", err.Error())
 	}
 
-
 	mux := goji.NewMux()
 
 	// API
@@ -1374,7 +1373,7 @@ func postBuy(w http.ResponseWriter, r *http.Request) {
 	}
 
 	seller := User{}
-	err = tx.Get(&seller, "SELECT * FROM `users` WHERE `id` = ? FOR UPDATE", targetItem.SellerID)
+	err = tx.Get(&seller, "SELECT * FROM `users` WHERE `id` = ?", targetItem.SellerID)
 	if err == sql.ErrNoRows {
 		outputErrorMsg(w, http.StatusNotFound, "seller not found")
 		tx.Rollback()
@@ -2075,7 +2074,7 @@ func postSell(w http.ResponseWriter, r *http.Request) {
 		now,
 		seller.ID,
 	)
-	userMap[seller.ID] = UserSimple{ID:seller.ID, AccountName:user.AccountName, NumSellItems: seller.NumSellItems+1}
+	userMap[seller.ID] = UserSimple{ID: seller.ID, AccountName: user.AccountName, NumSellItems: seller.NumSellItems + 1}
 	if err != nil {
 		log.Print(err)
 
