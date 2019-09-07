@@ -1036,7 +1036,7 @@ func getTransactions(w http.ResponseWriter, r *http.Request) {
 			itemDetail.BuyerID = tV.BuyerID
 			itemDetail.Buyer = &buyer
 			*/
-			itemDetail.Buyer = &UserSimple{tV.BuyerID, tV.BuyerAccountName.String, tV.BuyerNumSellItems.Int64}
+			itemDetail.Buyer = &UserSimple{tV.BuyerID, tV.BuyerAccountName.String, int(tV.BuyerNumSellItems.Int64)}
 		}
 
 		if tV.TransactionID.Valid && tV.TransactionID.Int64 > 0 {
