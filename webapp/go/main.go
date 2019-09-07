@@ -282,10 +282,10 @@ type transactionValue struct {
 	CreatedAt   time.Time `json:"-" db:"created_at"`
 	UpdatedAt   time.Time `json:"-" db:"updated_at"`
 
-	TransactionID                 int64     `json:"transaction_id" db:"transaction_id"`
-	TransactionSellerID           int64     `json:"transaction_seller_id" db:"transaction_seller_id"`
-	TransactionStatus             string    `json:"transaction_status" db:"transaction_status"`
-	ShippingStatus string    `json:"shipping_status" db:"shipping_status"`
+	TransactionID                 sql.NullInt64     `json:"transaction_id" db:"transaction_id"`
+	TransactionSellerID           sql.NullInt64      `json:"transaction_seller_id" db:"transaction_seller_id"`
+	TransactionStatus             sql.NullString   `json:"transaction_status" db:"transaction_status"`
+	ShippingStatus sql.NullString    `json:"shipping_status" db:"shipping_status"`
 }
 
 func init() {
