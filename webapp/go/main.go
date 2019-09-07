@@ -993,13 +993,6 @@ func getTransactions(w http.ResponseWriter, r *http.Request) {
 
 	itemDetails := []ItemDetail{}
 	for _, tV := range tVs {
-		/*
-		seller, err := getUserSimpleByID(tx, tV.SellerID)
-		if err != nil {
-			outputErrorMsg(w, http.StatusNotFound, "seller not found")
-			tx.Rollback()
-			return
-		}*/
 		seller := UserSimple{tV.SellerID, tV.SellerAccountName, tV.SellerNumSellItems}
 
 		category, err := getCategoryByID(tx, tV.CategoryID)
@@ -1026,16 +1019,6 @@ func getTransactions(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if tV.BuyerID != 0 {
-			/*
-			buyer, err := getUserSimpleByID(tx, tV.BuyerID)
-			if err != nil {
-				outputErrorMsg(w, http.StatusNotFound, "buyer not found")
-				tx.Rollback()
-				return
-			}
-			itemDetail.BuyerID = tV.BuyerID
-			itemDetail.Buyer = &buyer
-			*/
 			itemDetail.Buyer = &UserSimple{tV.BuyerID, tV.BuyerAccountName.String, int(tV.BuyerNumSellItems.Int64)}
 		}
 
