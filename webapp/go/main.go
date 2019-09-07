@@ -15,6 +15,7 @@ import (
 	"strconv"
 	"time"
 
+	_ "net/http/pprof"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/gorilla/sessions"
 	"github.com/jmoiron/sqlx"
@@ -279,6 +280,8 @@ func init() {
 }
 
 func main() {
+	go http.ListenAndServe(":3000", nil)
+
 	host := os.Getenv("MYSQL_HOST")
 	if host == "" {
 		host = "127.0.0.1"
