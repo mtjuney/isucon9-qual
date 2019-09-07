@@ -284,7 +284,7 @@ type transactionValue struct {
 
 	TransactionID                 int64     `json:"transaction_id" db:"transaction_id"`
 	TransactionSellerID           int64     `json:"transaction_seller_id" db:"transaction_seller_id"`
-	TransactionStatus             string    `json:"status" db:"status"`
+	TransactionStatus             string    `json:"transaction_status" db:"transaction_status"`
 	ItemID             int64     `json:"item_id" db:"item_id"`
 	ItemName           string    `json:"item_name" db:"item_name"`
 	ItemPrice          int       `json:"item_price" db:"item_price"`
