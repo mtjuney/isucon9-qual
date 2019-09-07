@@ -1063,10 +1063,14 @@ func getTransactions(w http.ResponseWriter, r *http.Request) {
 				tx.Rollback()
 				return
 			}
-
+			/*
 			itemDetail.TransactionEvidenceID = transactionEvidence.ID
 			itemDetail.TransactionEvidenceStatus = transactionEvidence.Status
 			itemDetail.ShippingStatus = ssr.Status
+				*/
+			itemDetail.TransactionEvidenceID = tV.TransactionID.Int64
+			itemDetail.TransactionEvidenceStatus = tV.TransactionStatus.String
+			itemDetail.ShippingStatus = tV.ShippingStatus.String
 		}
 
 		itemDetails = append(itemDetails, itemDetail)
