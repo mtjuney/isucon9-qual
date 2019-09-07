@@ -18,7 +18,6 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/gorilla/sessions"
 	"github.com/jmoiron/sqlx"
-	"github.com/najeira/measure"
 	goji "goji.io"
 	"goji.io/pat"
 	"golang.org/x/crypto/bcrypt"
@@ -410,14 +409,12 @@ func main() {
 }
 
 func getSession(r *http.Request) *sessions.Session {
-	defer measure.Start("getSession").Stop()
 	session, _ := store.Get(r, sessionName)
 
 	return session
 }
 
 func getCSRFToken(r *http.Request) string {
-	defer measure.Start("getCSRFToken").Stop()
 	session := getSession(r)
 
 	csrfToken, ok := session.Values["csrf_token"]
@@ -429,7 +426,6 @@ func getCSRFToken(r *http.Request) string {
 }
 
 func getUser(r *http.Request) (user User, errCode int, errMsg string) {
-	defer measure.Start("getUser").Stop()
 	session := getSession(r)
 	userID, ok := session.Values["user_id"]
 	if !ok {
@@ -449,7 +445,6 @@ func getUser(r *http.Request) (user User, errCode int, errMsg string) {
 }
 
 func getUserSimpleByID(q sqlx.Queryer, userID int64) (userSimple UserSimple, err error) {
-	defer measure.Start("getUserSimpleByID").Stop()
 	user := User{}
 	err = sqlx.Get(q, &user, "SELECT * FROM `users` WHERE `id` = ?", userID)
 	if err != nil {
@@ -462,7 +457,6 @@ func getUserSimpleByID(q sqlx.Queryer, userID int64) (userSimple UserSimple, err
 }
 
 func getCategoryByID(q sqlx.Queryer, categoryID int) (Category, error) {
-	defer measure.Start("getCategoryByID").Stop()
 	var category Category
 	var ok bool
 	var err error
@@ -480,7 +474,6 @@ func getCategoryByID(q sqlx.Queryer, categoryID int) (Category, error) {
 }
 
 func getConfigByName(name string) (string, error) {
-	defer measure.Start("getConfigByName").Stop()
 	config := Config{}
 	err := dbx.Get(&config, "SELECT * FROM `configs` WHERE `name` = ?", name)
 	if err == sql.ErrNoRows {
@@ -494,7 +487,6 @@ func getConfigByName(name string) (string, error) {
 }
 
 func getPaymentServiceURL() string {
-	defer measure.Start("getPaymentServiceURL").Stop()
 	val, _ := getConfigByName("payment_service_url")
 	if val == "" {
 		return DefaultPaymentServiceURL
@@ -503,7 +495,6 @@ func getPaymentServiceURL() string {
 }
 
 func getShipmentServiceURL() string {
-	defer measure.Start("getSipmentServiceURL").Stop()
 	val, _ := getConfigByName("shipment_service_url")
 	if val == "" {
 		return DefaultShipmentServiceURL
@@ -512,12 +503,10 @@ func getShipmentServiceURL() string {
 }
 
 func getIndex(w http.ResponseWriter, r *http.Request) {
-	defer measure.Start("getIndex").Stop()
 	templates.ExecuteTemplate(w, "index.html", struct{}{})
 }
 
 func postInitialize(w http.ResponseWriter, r *http.Request) {
-	defer measure.Start("postInitialize").Stop()
 	ri := reqInitialize{}
 
 	err := json.NewDecoder(r.Body).Decode(&ri)
@@ -568,7 +557,6 @@ func postInitialize(w http.ResponseWriter, r *http.Request) {
 }
 
 func getNewItems(w http.ResponseWriter, r *http.Request) {
-	defer measure.Start("getNewItems").Stop()
 	query := r.URL.Query()
 	itemIDStr := query.Get("item_id")
 	var itemID int64
@@ -665,7 +653,6 @@ func getNewItems(w http.ResponseWriter, r *http.Request) {
 }
 
 func getNewCategoryItems(w http.ResponseWriter, r *http.Request) {
-	defer measure.Start("getNewCategoryItems").Stop()
 	rootCategoryIDStr := pat.Param(r, "root_category_id")
 	rootCategoryID, err := strconv.Atoi(rootCategoryIDStr)
 	if err != nil || rootCategoryID <= 0 {
@@ -796,7 +783,6 @@ func getNewCategoryItems(w http.ResponseWriter, r *http.Request) {
 }
 
 func getUserItems(w http.ResponseWriter, r *http.Request) {
-	defer measure.Start("getUserItems").Stop()
 	userIDStr := pat.Param(r, "user_id")
 	userID, err := strconv.ParseInt(userIDStr, 10, 64)
 	if err != nil || userID <= 0 {
@@ -905,7 +891,6 @@ func getUserItems(w http.ResponseWriter, r *http.Request) {
 }
 
 func getTransactions(w http.ResponseWriter, r *http.Request) {
-	defer measure.Start("getTransactions").Stop()
 
 	user, errCode, errMsg := getUser(r)
 	if errMsg != "" {
@@ -1092,7 +1077,6 @@ func getTransactions(w http.ResponseWriter, r *http.Request) {
 }
 
 func getItem(w http.ResponseWriter, r *http.Request) {
-	defer measure.Start("getItem").Stop()
 	itemIDStr := pat.Param(r, "item_id")
 	itemID, err := strconv.ParseInt(itemIDStr, 10, 64)
 	if err != nil || itemID <= 0 {
@@ -1191,7 +1175,6 @@ func getItem(w http.ResponseWriter, r *http.Request) {
 }
 
 func postItemEdit(w http.ResponseWriter, r *http.Request) {
-	defer measure.Start("postItemEdit").Stop()
 	rie := reqItemEdit{}
 	err := json.NewDecoder(r.Body).Decode(&rie)
 	if err != nil {
@@ -1287,7 +1270,6 @@ func postItemEdit(w http.ResponseWriter, r *http.Request) {
 }
 
 func getQRCode(w http.ResponseWriter, r *http.Request) {
-	defer measure.Start("getQRCode").Stop()
 	transactionEvidenceIDStr := pat.Param(r, "transaction_evidence_id")
 	transactionEvidenceID, err := strconv.ParseInt(transactionEvidenceIDStr, 10, 64)
 	if err != nil || transactionEvidenceID <= 0 {
@@ -1344,7 +1326,6 @@ func getQRCode(w http.ResponseWriter, r *http.Request) {
 }
 
 func postBuy(w http.ResponseWriter, r *http.Request) {
-	defer measure.Start("postBuy").Stop()
 	rb := reqBuy{}
 
 	err := json.NewDecoder(r.Body).Decode(&rb)
@@ -1534,7 +1515,6 @@ func postBuy(w http.ResponseWriter, r *http.Request) {
 }
 
 func postShip(w http.ResponseWriter, r *http.Request) {
-	defer measure.Start("postShip").Stop()
 	reqps := reqPostShip{}
 
 	err := json.NewDecoder(r.Body).Decode(&reqps)
@@ -1666,7 +1646,6 @@ func postShip(w http.ResponseWriter, r *http.Request) {
 }
 
 func postShipDone(w http.ResponseWriter, r *http.Request) {
-	defer measure.Start("postShipDone").Stop()
 	reqpsd := reqPostShipDone{}
 
 	err := json.NewDecoder(r.Body).Decode(&reqpsd)
@@ -1813,7 +1792,6 @@ func postShipDone(w http.ResponseWriter, r *http.Request) {
 }
 
 func postComplete(w http.ResponseWriter, r *http.Request) {
-	defer measure.Start("postComplete").Stop()
 	reqpc := reqPostComplete{}
 
 	err := json.NewDecoder(r.Body).Decode(&reqpc)
@@ -1967,7 +1945,6 @@ func postComplete(w http.ResponseWriter, r *http.Request) {
 }
 
 func postSell(w http.ResponseWriter, r *http.Request) {
-	defer measure.Start("postShell").Stop()
 	csrfToken := r.FormValue("csrf_token")
 	name := r.FormValue("name")
 	description := r.FormValue("description")
@@ -2110,7 +2087,6 @@ func postSell(w http.ResponseWriter, r *http.Request) {
 }
 
 func secureRandomStr(b int) string {
-	defer measure.Start("secureRandomStr").Stop()
 	k := make([]byte, b)
 	if _, err := crand.Read(k); err != nil {
 		panic(err)
@@ -2119,7 +2095,6 @@ func secureRandomStr(b int) string {
 }
 
 func postBump(w http.ResponseWriter, r *http.Request) {
-	defer measure.Start("postBump").Stop()
 	rb := reqBump{}
 	err := json.NewDecoder(r.Body).Decode(&rb)
 	if err != nil {
@@ -2226,7 +2201,6 @@ func postBump(w http.ResponseWriter, r *http.Request) {
 }
 
 func getSettings(w http.ResponseWriter, r *http.Request) {
-	defer measure.Start("getSettings").Stop()
 	csrfToken := getCSRFToken(r)
 
 	user, _, errMsg := getUser(r)
@@ -2250,7 +2224,6 @@ func getSettings(w http.ResponseWriter, r *http.Request) {
 }
 
 func postLogin(w http.ResponseWriter, r *http.Request) {
-	defer measure.Start("postLogin").Stop()
 	rl := reqLogin{}
 	err := json.NewDecoder(r.Body).Decode(&rl)
 	if err != nil {
@@ -2308,7 +2281,6 @@ func postLogin(w http.ResponseWriter, r *http.Request) {
 }
 
 func postRegister(w http.ResponseWriter, r *http.Request) {
-	defer measure.Start("postRegister").Stop()
 	rr := reqRegister{}
 	err := json.NewDecoder(r.Body).Decode(&rr)
 	if err != nil {
@@ -2375,7 +2347,6 @@ func postRegister(w http.ResponseWriter, r *http.Request) {
 }
 
 func getReports(w http.ResponseWriter, r *http.Request) {
-	defer measure.Start("getReports").Stop()
 	transactionEvidences := make([]TransactionEvidence, 0)
 	err := dbx.Select(&transactionEvidences, "SELECT * FROM `transaction_evidences` WHERE `id` > 15007")
 	if err != nil {
@@ -2389,7 +2360,6 @@ func getReports(w http.ResponseWriter, r *http.Request) {
 }
 
 func outputErrorMsg(w http.ResponseWriter, status int, msg string) {
-	defer measure.Start("outputErrorMsg").Stop()
 	w.Header().Set("Content-Type", "application/json;charset=utf-8")
 
 	w.WriteHeader(status)
@@ -2400,31 +2370,5 @@ func outputErrorMsg(w http.ResponseWriter, status int, msg string) {
 }
 
 func getImageURL(imageName string) string {
-	defer measure.Start("getImageURL").Stop()
 	return fmt.Sprintf("/upload/%s", imageName)
-}
-func getStats(w http.ResponseWriter, r *http.Request) {
-	stats := measure.GetStats()
-	stats.SortDesc("sum")
-	var results string
-
-	// print stats in CSV format
-	for _, s := range stats {
-		results += fmt.Sprintf("%s,%d,%f,%f,%f,%f,%f,%f\n",
-			s.Key, s.Count, s.Sum, s.Min, s.Max, s.Avg, s.Rate, s.P95)
-	}
-
-	out := []byte(results)
-
-	w.Header().Set("Content-Disposition", "attachment; filename=stats.csv")
-	w.Header().Set("Content-Type", "text/csv")
-	w.Header().Set("Content-Length", string(len(out)))
-	w.Write(out)
-	// json.NewEncoder(w).Encode(nil)
-}
-
-func resetStat(w http.ResponseWriter, r *http.Request) {
-	measure.Reset()
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(nil)
 }
