@@ -55,6 +55,7 @@ CREATE TABLE `transaction_evidences` (
   `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARACTER SET utf8mb4;
+CREATE INDEX idx_item_id ON transaction_evidences(item_id);
 
 DROP TABLE IF EXISTS `shippings`;
 CREATE TABLE `shippings` (
