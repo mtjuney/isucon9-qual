@@ -973,7 +973,7 @@ func getTransactions(w http.ResponseWriter, r *http.Request) {
 	} else {
 		// 1st page
 		err := tx.Select(&tVs,
-			"SELECT items.id, items.seller_id, items.buyer_id, items.status, items.name, items.price, items.description, items.image_name, items.category_id, items.created_at, items.updated_at, transaction_evidences.id as transaction_id, transaction_evidences.id as transaction_id, transaction_evidences.status as transaction_status, shippings.status as shipping_status FROM items LEFT OUTER JOIN transaction_evidences ON items.id = transaction_evidences.item_id LEFT OUTER JOIN shippings ON transaction_evidences.id = transaction_evidence_id WHERE (items.seller_id = ? OR items.buyer_id = ?) AND items.status IN (?,?,?,?,?) ORDER BY items.created_at DESC, items.id DESC LIMIT ?",
+			"SELECT buyer.id as buyer_id, buyer.account_name, buyer.account_name as buyer_account_name, buyser.num_sell_items as buyer_num_sell_items, seller.id as seller_id, seller.account_name as seller_account_name, seller.num_sell_items as seller_num_sell_items, items.id, items.seller_id, items.buyer_id, items.status, items.name, items.price, items.description, items.image_name, items.category_id, items.created_at, items.updated_at, transaction_evidences.id as transaction_id, transaction_evidences.status as transaction_status, shippings.status as shipping_status FROM items JOIN users seller ON seller.id = items.seller_id LEFT OTUER JOIN users buyer items.buyer_id = buyer.id LEFT OUTER JOIN transaction_evidences ON items.id = transaction_evidences.item_id LEFT OUTER JOIN shippings ON transaction_evidences.id = transaction_evidence_id WHERE (items.seller_id = ? OR items.buyer_id = ?) AND items.status IN (?,?,?,?,?) ORDER BY items.created_at DESC, items.id DESC LIMIT ?",
 			user.ID,
 			user.ID,
 			ItemStatusOnSale,
@@ -993,14 +993,14 @@ func getTransactions(w http.ResponseWriter, r *http.Request) {
 
 	itemDetails := []ItemDetail{}
 	for _, tV := range tVs {
-
+		/*
 		seller, err := getUserSimpleByID(tx, tV.SellerID)
 		if err != nil {
 			outputErrorMsg(w, http.StatusNotFound, "seller not found")
 			tx.Rollback()
 			return
-		}
-		// seller := UserSimple{tV.SellerID, tV.SellerAccountName, tV.SellerNumSellItems}
+		}*/
+		seller := UserSimple{tV.SellerID, tV.SellerAccountName, tV.SellerNumSellItems}
 
 		category, err := getCategoryByID(tx, tV.CategoryID)
 		if err != nil {
@@ -1026,6 +1026,7 @@ func getTransactions(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if tV.BuyerID != 0 {
+			/*
 			buyer, err := getUserSimpleByID(tx, tV.BuyerID)
 			if err != nil {
 				outputErrorMsg(w, http.StatusNotFound, "buyer not found")
@@ -1034,6 +1035,8 @@ func getTransactions(w http.ResponseWriter, r *http.Request) {
 			}
 			itemDetail.BuyerID = tV.BuyerID
 			itemDetail.Buyer = &buyer
+			*/
+			itemDetail.Buyer = &UserSimple{tV.BuyerID, tV.BuyerAccountName.String, tV.BuyerNumSellItems.Int64}
 		}
 
 		if tV.TransactionID.Valid && tV.TransactionID.Int64 > 0 {
