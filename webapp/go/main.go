@@ -280,7 +280,9 @@ func init() {
 }
 
 func main() {
-	go http.ListenAndServe(":3000", nil)
+	go func() {
+		log.Println(http.ListenAndServe("localhost:3000", nil))
+	}()
 
 	host := os.Getenv("MYSQL_HOST")
 	if host == "" {
