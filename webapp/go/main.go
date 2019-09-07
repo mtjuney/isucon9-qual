@@ -279,6 +279,9 @@ func init() {
 	))
 }
 
+var categoryMap map[int]Category
+var userMap map[int64]UserSimple
+
 func main() {
 	host := os.Getenv("MYSQL_HOST")
 	if host == "" {
@@ -319,6 +322,32 @@ func main() {
 		log.Fatalf("failed to connect to DB: %s.", err.Error())
 	}
 	defer dbx.Close()
+
+	categoryMap = make(map[int]Category)
+	userMap = make(map[int64]UserSimple)
+
+	categories := []Category{}
+	users := []User{}
+
+	err = dbx.Select(&categories,
+		"SELECT * FROM `categories`")
+	if err != nil {
+		log.Fatalf("load category.\nError: %s", err.Error())
+	}
+	for _, category := range categories {
+		categoryMap[category.ID] = category
+	}
+	err = dbx.Select(&users,
+		"SELECT * FROM `users`")
+
+	for _, user := range users {
+		userMap[user.ID] = UserSimple{ID: user.ID, AccountName: user.AccountName, NumSellItems: user.NumSellItems}
+	}
+
+	if err != nil {
+		log.Fatalf("load category.\nError: %s", err.Error())
+	}
+
 
 	mux := goji.NewMux()
 
@@ -403,6 +432,9 @@ func getUser(r *http.Request) (user User, errCode int, errMsg string) {
 
 func getUserSimpleByID(q sqlx.Queryer, userID int64) (userSimple UserSimple, err error) {
 	defer measure.Start("getUserSimpleByID").Stop()
+	if user, ok := userMap[userID]; ok {
+		return user, nil
+	}
 	user := User{}
 	err = sqlx.Get(q, &user, "SELECT * FROM `users` WHERE `id` = ?", userID)
 	if err != nil {
@@ -414,9 +446,14 @@ func getUserSimpleByID(q sqlx.Queryer, userID int64) (userSimple UserSimple, err
 	return userSimple, err
 }
 
-func getCategoryByID(q sqlx.Queryer, categoryID int) (category Category, err error) {
+func getCategoryByID(q sqlx.Queryer, categoryID int) (Category, error) {
 	defer measure.Start("getCategoryByID").Stop()
-	err = sqlx.Get(q, &category, "SELECT * FROM `categories` WHERE `id` = ?", categoryID)
+	var category Category
+	var ok bool
+	var err error
+	if category, ok = categoryMap[categoryID]; !ok {
+		err = sqlx.Get(q, &category, "SELECT * FROM `categories` WHERE `id` = ?", categoryID)
+	}
 	if category.ParentID != 0 {
 		parentCategory, err := getCategoryByID(q, category.ParentID)
 		if err != nil {
@@ -2038,6 +2075,7 @@ func postSell(w http.ResponseWriter, r *http.Request) {
 		now,
 		seller.ID,
 	)
+	userMap[seller.ID] = UserSimple{ID:seller.ID, AccountName:user.AccountName, NumSellItems: seller.NumSellItems+1}
 	if err != nil {
 		log.Print(err)
 
