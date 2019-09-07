@@ -944,7 +944,7 @@ func getTransactions(w http.ResponseWriter, r *http.Request) {
 	if itemID > 0 && createdAt > 0 {
 		// paging
 		err := tx.Select(&tVs,
-			"SELECT items.id, items.seller_id, items.buyer_id, items.status, items.name, items.price, items.description, items.image_name, items.category_id, items.created_at, items.updated_at, transaction_evidences.id as transaction_id, transaction_evidences.status as transaction_status, shippings.status as shipping_status FROM items JOIN transaction_evidences ON items.id = transaction_evidences.item_id LEFT OUTER JOIN shippings ON transaction_evidences.id = transaction_evidence_id ON WHERE items.seller_id = ? OR items.buyer_id = ?) AND items.status IN (?,?,?,?,?) AND (items.created_at < ? OR (items.created_at <= ? AND items.id < ?)) ORDER BY items.created_at DESC, items.id DESC LIMIT ?",
+			"SELECT items.id, items.seller_id, items.buyer_id, items.status, items.name, items.price, items.description, items.image_name, items.category_id, items.created_at, items.updated_at, transaction_evidences.id as transaction_id, transaction_evidences.status as transaction_status, shippings.status as shipping_status FROM items JOIN transaction_evidences ON items.id = transaction_evidences.item_id LEFT OUTER JOIN shippings ON transaction_evidences.id = transaction_evidence_id ON WHERE (items.seller_id = ? OR items.buyer_id = ?) AND items.status IN (?,?,?,?,?) AND (items.created_at < ? OR (items.created_at <= ? AND items.id < ?)) ORDER BY items.created_at DESC, items.id DESC LIMIT ?",
 			user.ID,
 			user.ID,
 			ItemStatusOnSale,
