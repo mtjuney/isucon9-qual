@@ -348,7 +348,6 @@ func main() {
 		log.Fatalf("load category.\nError: %s", err.Error())
 	}
 
-
 	mux := goji.NewMux()
 
 	// API
@@ -665,12 +664,18 @@ func getNewCategoryItems(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var categoryIDs []int
-	err = dbx.Select(&categoryIDs, "SELECT id FROM `categories` WHERE parent_id=?", rootCategory.ID)
-	if err != nil {
-		log.Print(err)
-		outputErrorMsg(w, http.StatusInternalServerError, "db error")
-		return
+	for cID, cat := range categoryMap {
+		if cat.ParentID == rootCategory.ID {
+			categoryIDs = append(categoryIDs, cID)
+		}
 	}
+
+	//err = dbx.Select(&categoryIDs, "SELECT id FROM `categories` WHERE parent_id=?", rootCategory.ID)
+	//if err != nil {
+	//	log.Print(err)
+	//	outputErrorMsg(w, http.StatusInternalServerError, "db error")
+	//	return
+	//}
 
 	query := r.URL.Query()
 	itemIDStr := query.Get("item_id")
@@ -2075,7 +2080,7 @@ func postSell(w http.ResponseWriter, r *http.Request) {
 		now,
 		seller.ID,
 	)
-	userMap[seller.ID] = UserSimple{ID:seller.ID, AccountName:user.AccountName, NumSellItems: seller.NumSellItems+1}
+	userMap[seller.ID] = UserSimple{ID: seller.ID, AccountName: user.AccountName, NumSellItems: seller.NumSellItems + 1}
 	if err != nil {
 		log.Print(err)
 
