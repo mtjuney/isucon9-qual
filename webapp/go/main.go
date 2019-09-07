@@ -84,6 +84,7 @@ type User struct {
 type UserSimple struct {
 	ID           int64  `json:"id"`
 	AccountName  string `json:"account_name"`
+	Address      string `json:"address,omitempty" db:"address"`
 	NumSellItems int    `json:"num_sell_items"`
 }
 
@@ -441,6 +442,7 @@ func getUserSimpleByID(q sqlx.Queryer, userID int64) (userSimple UserSimple, err
 	}
 	userSimple.ID = user.ID
 	userSimple.AccountName = user.AccountName
+	userSimple.Address = user.Address
 	userSimple.NumSellItems = user.NumSellItems
 	return userSimple, err
 }
@@ -1372,8 +1374,7 @@ func postBuy(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	seller := User{}
-	err = tx.Get(&seller, "SELECT * FROM `users` WHERE `id` = ?", targetItem.SellerID)
+	seller, err := getUserSimpleByID(dbx, targetItem.SellerID)
 	if err == sql.ErrNoRows {
 		outputErrorMsg(w, http.StatusNotFound, "seller not found")
 		tx.Rollback()
