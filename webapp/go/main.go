@@ -270,26 +270,30 @@ type resSetting struct {
 }
 
 type transactionValue struct {
-	ID                 int64     `json:"id" db:"id"`
-	SellerID           int64     `json:"seller_id" db:"seller_id"`
-	SellerAccountName  string    `json:"seller_account_name" db:"seller_account_name"`
-	SellerNumSellItems int       `json:"seller_num_sell_items" db:"seller_num_sell_items"`
-	BuyerID            int64     `json:"buyer_id" db:"buyer_id"`
-	Status             string    `json:"status" db:"status"`
-	Name               string    `json:"name" db:"name"`
-	Price              int       `json:"price" db:"price"`
-	Description        string    `json:"description" db:"description"`
-	ImageName          string    `json:"image_name" db:"image_name"`
-	CategoryID         int       `json:"category_id" db:"category_id"`
-	CreatedAt          time.Time `json:"-" db:"created_at"`
-	UpdatedAt          time.Time `json:"-" db:"updated_at"`
-	HashedPassword     []byte    `json:"-" db:"hashed_password"`
-	Address            string    `json:"address,omitempty" db:"address"`
-	NumSellItems       int       `json:"num_sell_items" db:"num_sell_items"`
-	LastBump           time.Time `json:"-" db:"last_bump"`
-	ParentID           int       `json:"parent_id" db:"parent_id"`
-	CategoryName       string    `json:"category_name" db:"category_name"`
-	ParentCategoryName string    `json:"parent_category_name,omitempty" db:"-"`
+	ID          int64     `json:"id" db:"id"`
+	SellerID    int64     `json:"seller_id" db:"seller_id"`
+	BuyerID     int64     `json:"buyer_id" db:"buyer_id"`
+	Status      string    `json:"status" db:"status"`
+	Name        string    `json:"name" db:"name"`
+	Price       int       `json:"price" db:"price"`
+	Description string    `json:"description" db:"description"`
+	ImageName   string    `json:"image_name" db:"image_name"`
+	CategoryID  int       `json:"category_id" db:"category_id"`
+	CreatedAt   time.Time `json:"-" db:"created_at"`
+	UpdatedAt   time.Time `json:"-" db:"updated_at"`
+
+	TransactionID                 int64     `json:"transaction_id" db:"transaction_id"`
+	TransactionSellerID           int64     `json:"transaction_seller_id" db:"transaction_seller_id"`
+	TransactionBuyerID            int64     `json:"buyer_id" db:"buyer_id"`
+	TransactionStatus             string    `json:"status" db:"status"`
+	ItemID             int64     `json:"item_id" db:"item_id"`
+	ItemName           string    `json:"item_name" db:"item_name"`
+	ItemPrice          int       `json:"item_price" db:"item_price"`
+	ItemDescription    string    `json:"item_description" db:"item_description"`
+	ItemCategoryID     int       `json:"item_category_id" db:"item_category_id"`
+	ItemRootCategoryID int       `json:"item_root_category_id" db:"item_root_category_id"`
+	TransactionCreatedAt          time.Time `json:"-" db:"transaction_created_at"`
+	TransactionUpdatedAt          time.Time `json:"-" db:"transaction_updated_at"`
 }
 
 func init() {
@@ -944,14 +948,11 @@ func getTransactions(w http.ResponseWriter, r *http.Request) {
 	}
 
 	tx := dbx.MustBegin()
-	// items := []Item{}
-	itemDetails := []ItemDetail{}
 	tVs := []transactionValue{}
 	if itemID > 0 && createdAt > 0 {
 		// paging
 		err := tx.Select(&tVs,
-			"SELECT items.id, items.seller_id, users.account_name as seller_account_name, users.num_sell_items as seller_num_sell_items, items.status, items.name, items.price, items.description, items.image_name, items.category_id, categories.id, categories.parent_id, categories.category_name, items.created_at FROM `items` JOIN `users` ON users.id = ? JOIN categories ON items.category_id = categories.id WHERE (`seller_id` = ? OR `buyer_id` = ?) AND `status` IN (?,?,?,?,?) AND (items.created_at < ?  OR (items.created_at <= ? AND items.id < ?)) ORDER BY items.created_at DESC, items.id DESC LIMIT ?",
-			user.ID,
+			"SELECT items.id, items.seller_id, items.buyer_id, items.status, items.name, items.price, items.description, items.image_name, items.category_id, items.created_at, items.updated_at, transaction_evidences.id as transaction_id, transaction_evidences.seller_id as transaction_id, transaction_evidences.buyer_id as transaction_buyer_id, transaction_evidences.status as transaction_status, transaction_evidences.item_name as transaction_item_name, transaction_evidences.item_price as transaction_item_price, transaction_evidences.item_description as transaction_item_description, transaction_evidences.item_category_id as transaction_item_category_id , transaction_evidences.item_root_category_id as transaction_root_category_id, transaction_evidences.created_at as transaction_created_at, transaction_evidences.updated_at as transaction_updated_at FROM `items` JOIN transaction_evidences ON items.id = transaction_evidences.item_id WHERE items.seller_id = ? OR items.buyer_id = ?) AND items.status IN (?,?,?,?,?) AND (items.created_at < ? OR (items.created_at <= ? AND items.id < ?)) ORDER BY items.created_at DESC, items.id DESC LIMIT ?",
 			user.ID,
 			user.ID,
 			ItemStatusOnSale,
@@ -973,8 +974,7 @@ func getTransactions(w http.ResponseWriter, r *http.Request) {
 	} else {
 		// 1st page
 		err := tx.Select(&tVs,
-			"SELECT items.id, items.seller_id, users.account_name as seller_account_name, users.num_sell_items as seller_num_sell_items, items.status, items.name, items.price, items.description, items.image_name, items.category_id, categories.id, categories.parent_id, categories.category_name, items.created_at FROM `items` JOIN `users` ON users.id = ? JOIN categories ON items.category_id = categories.id WHERE (`seller_id` = ? OR `buyer_id` = ?) AND `status` IN (?,?,?,?,?) ORDER BY items.created_at DESC, items.id DESC LIMIT ?",
-			user.ID,
+			"SELECT items.id, items.seller_id, items.buyer_id, items.status, items.name, items.price, items.description, items.image_name, items.category_id, items.created_at, items.updated_at, transaction_evidences.id as transaction_id, transaction_evidences.seller_id as transaction_id, transaction_evidences.buyer_id as transaction_buyer_id, transaction_evidences.status as transaction_status, transaction_evidences.item_name as transaction_item_name, transaction_evidences.item_price as transaction_item_price, transaction_evidences.item_description as transaction_item_description, transaction_evidences.item_category_id as transaction_item_category_id , transaction_evidences.item_root_category_id as transaction_root_category_id, transaction_evidences.created_at as transaction_created_at, transaction_evidences.updated_at as transaction_updated_at FROM items, transaction_evidences FROM `items` JOIN transaction_evidences ON items.id = transaction_evidences.item_id WHERE (items.seller_id = ? OR items.buyer_id = ?) AND items.status IN (?,?,?,?,?) ORDER BY items.created_at DESC, items.id DESC LIMIT ?",
 			user.ID,
 			user.ID,
 			ItemStatusOnSale,
@@ -992,6 +992,7 @@ func getTransactions(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	itemDetails := []ItemDetail{}
 	for _, tV := range tVs {
 		seller, err := getUserSimpleByID(tx, tV.SellerID)
 		if err != nil {
