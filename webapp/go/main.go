@@ -1039,7 +1039,8 @@ func getTransactions(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		if transactionEvidence.ID > 0 {
+		if tV.TransactionID.Valid && tV.TransactionID.Int64 > 0 {
+		// if transactionEvidence.ID > 0 {
 			shipping := Shipping{}
 			err = tx.Get(&shipping, "SELECT * FROM `shippings` WHERE `transaction_evidence_id` = ?", transactionEvidence.ID)
 			if err == sql.ErrNoRows {
