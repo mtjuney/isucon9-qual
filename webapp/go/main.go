@@ -2358,8 +2358,14 @@ func getStats(w http.ResponseWriter, r *http.Request) {
 		results += fmt.Sprintf("%s,%d,%f,%f,%f,%f,%f,%f\n",
 			s.Key, s.Count, s.Sum, s.Min, s.Max, s.Avg, s.Rate, s.P95)
 	}
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(nil)
+
+	out := []byte(results)
+
+	w.Header().Set("Content-Disposition", "attachment; filename=stats.csv")
+	w.Header().Set("Content-Type", "text/csv")
+	w.Header().Set("Content-Length", string(len(out)))
+	w.Write(out)
+	// json.NewEncoder(w).Encode(nil)
 }
 
 func resetStat(w http.ResponseWriter, r *http.Request) {
