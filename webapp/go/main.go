@@ -950,7 +950,7 @@ func getTransactions(w http.ResponseWriter, r *http.Request) {
 	if itemID > 0 && createdAt > 0 {
 		// paging
 		err := tx.Select(&tVs,
-			"SELECT items.id, items.seller_id, users.seller_account_name, users.num_sell_items as seller_account_name, items.status, items.name, items.price, items.description, items.image_name, items.category_id, categories.id, categories.parent_id, categories.category_name, items.created_at FROM `items` JOIN `users` ON items.seller_id = users.id JOIN categories ON items.category_id = categories.id WHERE (`seller_id` = ? OR `buyer_id` = ?) AND `status` IN (?,?,?,?,?) AND (items.created_at < ?  OR (items.created_at <= ? AND items.id < ?)) ORDER BY items.created_at DESC, items.id DESC LIMIT ?",
+			"SELECT items.id, items.seller_id, users.seller_account_name, users.num_sell_items as seller_num_sell_items, items.status, items.name, items.price, items.description, items.image_name, items.category_id, categories.id, categories.parent_id, categories.category_name, items.created_at FROM `items` JOIN `users` ON items.seller_id = users.id JOIN categories ON items.category_id = categories.id WHERE (`seller_id` = ? OR `buyer_id` = ?) AND `status` IN (?,?,?,?,?) AND (items.created_at < ?  OR (items.created_at <= ? AND items.id < ?)) ORDER BY items.created_at DESC, items.id DESC LIMIT ?",
 			user.ID,
 			user.ID,
 			ItemStatusOnSale,
@@ -972,7 +972,7 @@ func getTransactions(w http.ResponseWriter, r *http.Request) {
 	} else {
 		// 1st page
 		err := tx.Select(&tVs,
-			"SELECT items.id, items.seller_id, users.seller_account_name as seller_account_name, users.num_sell_items, items.status, items.name, items.price, items.description, items.image_name, items.category_id, categories.id, categories.parent_id, categories.category_name, items.created_at FROM `items` JOIN `users` ON items.seller_id = users.id JOIN categories ON items.category_id = categories.id WHERE (`seller_id` = ? OR `buyer_id` = ?) AND `status` IN (?,?,?,?,?) ORDER BY items.created_at DESC, items.id DESC LIMIT ?",
+			"SELECT items.id, items.seller_id, users.seller_account_name as seller_account_name, users.num_sell_items as seller_num_sell_items, items.status, items.name, items.price, items.description, items.image_name, items.category_id, categories.id, categories.parent_id, categories.category_name, items.created_at FROM `items` JOIN `users` ON items.seller_id = users.id JOIN categories ON items.category_id = categories.id WHERE (`seller_id` = ? OR `buyer_id` = ?) AND `status` IN (?,?,?,?,?) ORDER BY items.created_at DESC, items.id DESC LIMIT ?",
 			user.ID,
 			user.ID,
 			ItemStatusOnSale,
