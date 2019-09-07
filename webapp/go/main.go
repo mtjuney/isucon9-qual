@@ -1371,13 +1371,14 @@ func postBuy(w http.ResponseWriter, r *http.Request) {
 		tx.Rollback()
 		return
 	}
-	seller, err := getUserSimpleByID(dbx, targetItem.SellerID)
+
+	seller := User{}
+	err = tx.Get(&seller, "SELECT * FROM `users` WHERE `id` = ?", targetItem.SellerID)
 	if err == sql.ErrNoRows {
 		outputErrorMsg(w, http.StatusNotFound, "seller not found")
 		tx.Rollback()
 		return
 	}
-
 	if err != nil {
 		log.Print(err)
 
