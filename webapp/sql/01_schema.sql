@@ -38,6 +38,7 @@ CREATE INDEX idx_created_at ON items(created_at);
 CREATE INDEX idx_created_at_id ON items(created_at, id);
 CREATE INDEX idx_status_created_at ON items(status, created_at);
 CREATE INDEX idx_category_id_created_at ON items(category_id, created_at);
+CREATE INDEX idx_seller_id_buyer_id ON items(seller_id, buyer_id);
 
 DROP TABLE IF EXISTS `transaction_evidences`;
 CREATE TABLE `transaction_evidences` (
