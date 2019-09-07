@@ -542,7 +542,7 @@ func postInitialize(w http.ResponseWriter, r *http.Request) {
 
 	res := resInitialize{
 		// キャンペーン実施時には還元率の設定を返す。詳しくはマニュアルを参照のこと。
-		Campaign: 2,
+		Campaign: 0,
 		// 実装言語を返す
 		Language: "Go",
 	}
@@ -669,13 +669,6 @@ func getNewCategoryItems(w http.ResponseWriter, r *http.Request) {
 			categoryIDs = append(categoryIDs, cID)
 		}
 	}
-
-	//err = dbx.Select(&categoryIDs, "SELECT id FROM `categories` WHERE parent_id=?", rootCategory.ID)
-	//if err != nil {
-	//	log.Print(err)
-	//	outputErrorMsg(w, http.StatusInternalServerError, "db error")
-	//	return
-	//}
 
 	query := r.URL.Query()
 	itemIDStr := query.Get("item_id")
@@ -2223,13 +2216,9 @@ func getSettings(w http.ResponseWriter, r *http.Request) {
 
 	ress.PaymentServiceURL = getPaymentServiceURL()
 
-	categories := []Category{}
-
-	err := dbx.Select(&categories, "SELECT * FROM `categories`")
-	if err != nil {
-		log.Print(err)
-		outputErrorMsg(w, http.StatusInternalServerError, "db error")
-		return
+	categories := make([]Category, 0, len(categoryMap))
+	for _, cat := range categoryMap {
+		categories = append(categories, cat)
 	}
 	ress.Categories = categories
 
